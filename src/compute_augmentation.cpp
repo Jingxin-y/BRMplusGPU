@@ -1,14 +1,41 @@
 // -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; indent-tabs-mode: nil; -*-
 
 #include "RcppArmadillo.h"
+#include <cstdlib>
+#include <string>
 
 // [[Rcpp::depends(RcppArmadillo)]]
+
+#ifdef BRM_USE_CUDA
+extern "C" int compute_augmentation_cuda(
+  const double* va,
+  const double* vb,
+  const double* fisher,
+  const double* k_rs,
+  const double* k_stu,
+  const double* k_s_tu,
+  int n,
+  int pa,
+  int pb,
+  double* out);
+#endif
+
+namespace {
+
+bool use_gpu_requested() {
+  const char* value = std::getenv("BRM_USE_GPU");
+  if (value == nullptr) {
+    return false;
+  }
+
+  std::string flag(value);
+  return flag == "1" || flag == "true" || flag == "TRUE" || flag == "yes" || flag == "YES";
+}
 
 //' @importFrom Rcpp evalCpp
 //' @useDynLib brm
 //' @exportPattern ˆ[[:alpha:]]+
-// [[Rcpp::export]]
-arma::vec compute_augmentation_cpp(
+arma::vec compute_augmentation_cpu(
   const arma::mat& va,
   const arma::mat& vb,
   const arma::mat& fisher,
@@ -172,4 +199,49 @@ arma::vec compute_augmentation_cpp(
   arma::vec expect_A = -(fisher * b1) / static_cast<double>(n);
 
   return expect_A;
+}
+
+} // namespace
+
+// [[Rcpp::export]]
+arma::vec compute_augmentation_cpp(
+  const arma::mat& va,
+  const arma::mat& vb,
+  const arma::mat& fisher,
+  const arma::mat& k_rs,
+  const arma::mat& k_stu,
+  const arma::mat& k_s_tu) {
+
+  if (!use_gpu_requested()) {
+    return compute_augmentation_cpu(va, vb, fisher, k_rs, k_stu, k_s_tu);
+  }
+
+#ifdef BRM_USE_CUDA
+  int pa = static_cast<int>(va.n_cols);
+  int pb = static_cast<int>(vb.n_cols);
+  int n  = static_cast<int>(vb.n_rows);
+
+  arma::vec expect_A(pa + pb, arma::fill::zeros);
+  int status = compute_augmentation_cuda(
+    va.memptr(),
+    vb.memptr(),
+    fisher.memptr(),
+    k_rs.memptr(),
+    k_stu.memptr(),
+    k_s_tu.memptr(),
+    n,
+    pa,
+    pb,
+    expect_A.memptr());
+
+  if (status == 0 && expect_A.is_finite()) {
+    return expect_A;
+  }
+
+  Rcpp::warning("CUDA augmentation failed; falling back to CPU implementation.");
+#else
+  Rcpp::warning("BRM_USE_GPU is set, but brm was not compiled with CUDA; falling back to CPU implementation.");
+#endif
+
+  return compute_augmentation_cpu(va, vb, fisher, k_rs, k_stu, k_s_tu);
 }

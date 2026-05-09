@@ -46,8 +46,14 @@ if (length(argv) == 0) {
     } 
 
 #### 
-ncores <- as.integer(Sys.getenv("SLURM_CPUS_PER_TASK", "1")) 
-ncores <- min(ncores, 120) 
+use_gpu <- Sys.getenv("BRM_USE_GPU", "0") %in% c("1", "true", "TRUE", "yes", "YES")
+ncores <- as.integer(Sys.getenv("SLURM_CPUS_PER_TASK", "1"))
+if (use_gpu) {
+  ncores <- as.integer(Sys.getenv("BRM_GPU_WORKERS", "1"))
+  message("BRM_USE_GPU is enabled; using ", ncores, " R worker(s) to avoid GPU oversubscription.")
+} else {
+  ncores <- min(ncores, 120)
+}
 cl <- makeCluster(ncores, type = "SOCK") 
 registerDoSNOW(cl) 
 

@@ -17,3 +17,17 @@
 
 PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS)
 PKG_LIBS = $(SHLIB_OPENMP_CXXFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
+
+ifeq ($(BRM_USE_CUDA),1)
+NVCC ?= nvcc
+CUDA_HOME ?= $(shell dirname $$(dirname $$(command -v $(NVCC))))
+CUDA_LIB ?= $(CUDA_HOME)/lib64
+CUDA_ARCH ?= sm_90
+
+OBJECTS = RcppExports.o compute_augmentation.o compute_augmentation_cuda.o mat_vec_mul.o
+PKG_CPPFLAGS += -DBRM_USE_CUDA
+PKG_LIBS += -L$(CUDA_LIB) -lcudart
+
+compute_augmentation_cuda.o: compute_augmentation_cuda.cu
+	$(NVCC) -std=c++14 -arch=$(CUDA_ARCH) -Xcompiler -fPIC -c $< -o $@
+endif

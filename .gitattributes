@@ -3,5 +3,6 @@
 *.R text eol=lf
 *.Rd text eol=lf
 *.sh text eol=lf
+*.cu text eol=lf
 Makefile text eol=lf
 src/Makevars text eol=lf
