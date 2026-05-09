@@ -24,10 +24,13 @@ CUDA_HOME ?= $(shell dirname $$(dirname $$(command -v $(NVCC))))
 CUDA_LIB ?= $(CUDA_HOME)/lib64
 CUDA_ARCH ?= sm_90
 
-OBJECTS = RcppExports.o compute_augmentation.o compute_augmentation_cuda.o mat_vec_mul.o
+OBJECTS = RcppExports.o compute_augmentation.o compute_augmentation_cuda.o exact_nll.o exact_nll_cuda.o mat_vec_mul.o
 PKG_CPPFLAGS += -DBRM_USE_CUDA
 PKG_LIBS += -L$(CUDA_LIB) -lcudart
 
 compute_augmentation_cuda.o: compute_augmentation_cuda.cu
+	$(NVCC) -std=c++14 -arch=$(CUDA_ARCH) -Xcompiler -fPIC -c $< -o $@
+
+exact_nll_cuda.o: exact_nll_cuda.cu
 	$(NVCC) -std=c++14 -arch=$(CUDA_ARCH) -Xcompiler -fPIC -c $< -o $@
 endif

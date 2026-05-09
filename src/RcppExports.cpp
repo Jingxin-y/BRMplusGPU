@@ -39,10 +39,30 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// exact_nll_cpp
+double exact_nll_cpp(std::string param, const arma::vec& y, const arma::vec& x, const arma::mat& va, const arma::mat& vb, const arma::vec& alpha, const arma::vec& beta, const arma::vec& weight, double eps);
+RcppExport SEXP _brm_exact_nll_cpp(SEXP paramSEXP, SEXP ySEXP, SEXP xSEXP, SEXP vaSEXP, SEXP vbSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP weightSEXP, SEXP epsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::string >::type param(paramSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type va(vaSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type vb(vbSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type weight(weightSEXP);
+    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
+    rcpp_result_gen = Rcpp::wrap(exact_nll_cpp(param, y, x, va, vb, alpha, beta, weight, eps));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_brm_compute_augmentation_cpp", (DL_FUNC) &_brm_compute_augmentation_cpp, 6},
     {"_brm_mat_vec_mul", (DL_FUNC) &_brm_mat_vec_mul, 2},
+    {"_brm_exact_nll_cpp", (DL_FUNC) &_brm_exact_nll_cpp, 9},
     {NULL, NULL, 0}
 };
 

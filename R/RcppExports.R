@@ -15,3 +15,6 @@ mat_vec_mul <- function(m, v) {
     .Call('_brm_mat_vec_mul', PACKAGE = 'brm', m, v)
 }
 
+exact_nll_cpp <- function(param, y, x, va, vb, alpha, beta, weight, eps = 1e-12) {
+    .Call('_brm_exact_nll_cpp', PACKAGE = 'brm', param, y, x, va, vb, alpha, beta, weight, eps)
+}

@@ -35,6 +35,8 @@ exact <- function(param, y, x, va, vb, weight=NULL,
   n  <- length(y)
   
   eps <- 1e-12
+  use_gpu_nll <- Sys.getenv("BRM_USE_GPU", "0") %in% c("1", "true", "TRUE", "yes", "YES") &&
+    exists("exact_nll_cpp", mode = "function")
   
   ## Warm start: use ML estimates instead of zeros
   alpha.start <- alpha.ml
@@ -44,6 +46,19 @@ exact <- function(param, y, x, va, vb, weight=NULL,
   ## Negative log-likelihood helper
   ## ------------------------------------------------------------
   nll_fun <- function(alpha, beta, y.local){
+    if (use_gpu_nll) {
+      return(exact_nll_cpp(
+        param,
+        as.numeric(y.local),
+        as.numeric(x),
+        va,
+        vb,
+        as.numeric(alpha),
+        as.numeric(beta),
+        as.numeric(weight),
+        eps
+      ))
+    }
     
     p0p1 <- getProb(
       mat_vec_mul(va, alpha),
