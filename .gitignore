@@ -1,0 +1,42 @@
+# R and RStudio local state
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+*.Rproj.user/
+
+# R package build/check artifacts
+*.tar.gz
+*.tgz
+*.zip
+*.Rcheck/
+..Rcheck/
+brm.Rcheck/
+
+# Compiled objects and shared libraries
+*.o
+*.obj
+*.so
+*.dll
+*.dylib
+*.a
+
+# Generated simulation outputs and logs
+*.out
+*.log
+simulation_results_*.csv
+result_*.csv
+time.csv
+*.png
+*.pdf
+
+# Editor and OS noise
+*~
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Local deployment/helper directories
+docker/
+rstudio/
