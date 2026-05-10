@@ -37,6 +37,10 @@ exact <- function(param, y, x, va, vb, weight=NULL,
   eps <- 1e-12
   use_gpu_nll <- Sys.getenv("BRM_USE_GPU", "0") %in% c("1", "true", "TRUE", "yes", "YES") &&
     exists("exact_nll_cpp", mode = "function")
+  use_parallel_ptail <- Sys.getenv("BRM_EXACT_PARALLEL", ifelse(use_gpu_nll, "1", "0")) %in%
+    c("1", "true", "TRUE", "yes", "YES")
+  exact_workers <- as.integer(Sys.getenv("BRM_EXACT_WORKERS", Sys.getenv("SLURM_CPUS_PER_TASK", "1")))
+  exact_workers <- max(1L, exact_workers)
   
   ## Warm start: use ML estimates instead of zeros
   alpha.start <- alpha.ml
@@ -213,7 +217,7 @@ exact <- function(param, y, x, va, vb, weight=NULL,
     p0 <- pmin(pmax(p0, eps), 1 - eps)
     p1 <- pmin(pmax(p1, eps), 1 - eps)
     
-    LRT.sim <- numeric(nsim)
+    y.sim.list <- vector("list", nsim)
     
     for(i in seq_len(nsim)){
       
@@ -221,16 +225,33 @@ exact <- function(param, y, x, va, vb, weight=NULL,
       
       y.sim[idx0] <- rbinom(n0, 1, p0)
       y.sim[idx1] <- rbinom(n1, 1, p1)
-      
+      y.sim.list[[i]] <- y.sim
+    }
+
+    compute_lrt_sim <- function(y.sim){
       ## Cache null likelihood for this simulated dataset
       ll.null.sim <- optm.beta(alpha.ml[j], j, y.sim)
       
-      LRT.sim[i] <- LRT.alpha(
+      LRT.alpha(
         alphaj,
         j,
         y.sim,
         ll.null = ll.null.sim
       )
+    }
+
+    if (use_parallel_ptail && exact_workers > 1L && .Platform$OS.type == "unix") {
+      LRT.sim <- unlist(
+        parallel::mclapply(
+          y.sim.list,
+          compute_lrt_sim,
+          mc.cores = min(exact_workers, nsim),
+          mc.preschedule = TRUE
+        ),
+        use.names = FALSE
+      )
+    } else {
+      LRT.sim <- vapply(y.sim.list, compute_lrt_sim, numeric(1))
     }
     
     LRT.sim

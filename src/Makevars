@@ -28,6 +28,8 @@ OBJECTS = RcppExports.o compute_augmentation.o compute_augmentation_cuda.o exact
 PKG_CPPFLAGS += -DBRM_USE_CUDA
 PKG_LIBS += -L$(CUDA_LIB) -lcudart
 
+all: $(SHLIB)
+
 compute_augmentation_cuda.o: compute_augmentation_cuda.cu
 	$(NVCC) -std=c++14 -arch=$(CUDA_ARCH) -Xcompiler -fPIC -c $< -o $@
 

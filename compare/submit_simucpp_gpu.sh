@@ -18,6 +18,8 @@ module load gcc/12.3 r/4.3.1 cuda
 export BRM_USE_CUDA=1
 export BRM_USE_GPU=1
 export BRM_GPU_WORKERS="${BRM_GPU_WORKERS:-1}"
+export BRM_EXACT_PARALLEL="${BRM_EXACT_PARALLEL:-1}"
+export BRM_EXACT_WORKERS="${BRM_EXACT_WORKERS:-${SLURM_CPUS_PER_TASK:-4}}"
 export CUDA_LIB="${CUDA_HOME}/lib64"
 export CUDA_ARCH="${CUDA_ARCH:-sm_90}"
 
